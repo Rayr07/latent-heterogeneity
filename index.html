@@ -402,8 +402,8 @@
                 We extracted the latent multimodal embeddings from the fusion layer of our trained model (without using any survival labels) and applied K-Means clustering with K=2. Remarkably, this unsupervised clustering discovered two distinct patient subgroups with dramatically different prognostic profiles:
             </p>
             <div class="bg-slate-50 border-l-4 border-green-700 p-6 rounded text-slate-700 space-y-2 mb-4">
-                <p><span class="font-bold">Cluster 1:</span> 159 patients, event rate: 11% (18 events)</p>
-                <p><span class="font-bold">Cluster 2:</span> 34 patients, event rate: 31% (11 events)</p>
+                <p><span class="font-bold">Cluster 1:</span> event rate: 11%</p>
+                <p><span class="font-bold">Cluster 2:</span> event rate: 31% </p>
             </div>
             <p class="text-slate-600 leading-relaxed text-justify">
                 The <span class="font-semibold">2.8-fold difference in event rates</span> between clusters is substantial and highly significant. Critically, the clustering used only imaging and genomic modalities—survival labels were never provided. This demonstrates that the learned multimodal representations naturally encode meaningful prognostic structure and patient stratification, even without explicit supervision.
@@ -450,9 +450,9 @@
                 The central hypothesis was that instability stems from forcing a single global model to handle heterogeneous populations. If this is true, retraining models separately within each discovered subgroup should yield improved and stable performance. This is exactly what we observe:
             </p>
             <div class="bg-white bg-opacity-50 border-l-4 border-green-700 p-6 rounded text-slate-700 space-y-3 font-medium">
-                <p><span class="font-bold">Cluster 1 (lower-risk, 159 patients):</span> C-index mean = 0.82, std = 0.08 (highly stable)</p>
-                <p><span class="font-bold">Cluster 2 (higher-risk, 34 patients):</span> C-index mean = 0.76, std = 0.12 (stable)</p>
-                <p><span class="font-bold">Global model (pooled, 193 patients):</span> C-index mean = 0.59, std = 0.13 (unstable)</p>
+                <p><span class="font-bold">Cluster 1 (lower-risk):</span> C-index mean = 0.82, std = 0.08 (highly stable)</p>
+                <p><span class="font-bold">Cluster 2 (higher-risk):</span> C-index mean = 0.76, std = 0.12 (stable)</p>
+                <p><span class="font-bold">Global model (pooled):</span> C-index mean = 0.59, std = 0.13 (unstable)</p>
             </div>
             <p class="text-green-900 leading-relaxed text-justify font-medium mt-4">
                 Conditional models achieve both higher mean performance and lower variance compared to the global model. This demonstrates that <span class="font-bold">heterogeneity, not model limitations, was the root cause of instability</span>. Furthermore, Cluster 1 model outperforms Cluster 2 model, which is expected given the lower event rate and more predictable outcome in Cluster 1.
@@ -592,6 +592,7 @@
 </script>
 </body>
 </html>
+
 
 
 
