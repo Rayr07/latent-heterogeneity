@@ -322,7 +322,7 @@
         <div class="glass p-8 rounded-2xl animate-in-up" style="animation-delay: 0.1s">
             <h3 class="text-xl font-bold text-green-700 mb-4">Dataset: TCGA-BRCA Cohort</h3>
             <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                Experiments were conducted on the TCGA (The Cancer Genome Atlas) Breast Cancer (BRCA) cohort, consisting of <span class="font-semibold">193 patients</span> with paired multimodal data:
+                Experiments were conducted on the TCGA (The Cancer Genome Atlas) Breast Cancer (BRCA) cohort conisisting of patients with paired multimodal data:
             </p>
             <ul class="list-disc ml-6 text-slate-600 space-y-2 mb-4">
                 <li><span class="font-semibold">RNA Sequencing Data:</span> Gene expression profiles representing the genomic/molecular state of each tumor</li>
@@ -330,7 +330,7 @@
                 <li><span class="font-semibold">Clinical Outcomes:</span> Survival time and event status (censoring) for prognostic modeling</li>
             </ul>
             <p class="text-slate-600 leading-relaxed text-justify">
-                This dataset is particularly challenging for survival modeling because it is <span class="font-semibold">event-limited</span>: only 29 observed survival events (deaths) among 193 patients, with the remainder censored. This low event rate makes it difficult to train robust global models and increases the importance of efficient representation learning. RNA expression data was preprocessed into 128-dimensional PCA embeddings to reduce dimensionality while retaining variance. Histopathology images were tokenized into patch-level feature vectors using a pre-trained vision encoder, with 8 randomly sampled tokens selected per patient to balance computational efficiency and information capture.
+                This dataset is particularly challenging for survival modeling because it is <span class="font-semibold">event-limited</span>. The low event rate makes it difficult to train robust global models and increases the importance of efficient representation learning. RNA expression data was preprocessed into 128-dimensional PCA embeddings to reduce dimensionality while retaining variance. Histopathology images were tokenized into patch-level feature vectors using a pre-trained vision encoder, with 8 randomly sampled tokens selected per patient to balance computational efficiency and information capture.
             </p>
         </div>
 
@@ -361,7 +361,7 @@
                 <li><span class="font-bold">Unsupervised Clustering:</span> Apply K-Means clustering (K=2) to the embeddings to discover latent patient subgroups. K=2 is chosen based on the hypothesis of at least two distinct survival-generating mechanisms in the heterogeneous cancer population. No survival labels are used during clustering.</li>
                 <li><span class="font-bold">Cluster Stability Assessment:</span> Evaluate the robustness of clustering using Adjusted Rand Index (ARI) across multiple K-Means initializations. High ARI indicates the discovered clusters are stable and reproducible, not artifacts of random initialization.</li>
                 <li><span class="font-bold">Conditional Model Retraining:</span> Retrain survival models separately within each discovered subgroup. If heterogeneity is the root cause of instability, conditional models should show significantly improved and consistent performance within subgroups.</li>
-                <li><span class="font-bold">Bootstrap Resampling & Negative Controls:</span> Evaluate conditional models using bootstrap resampling and run negative control experiments (e.g., training on random cluster assignments) to confirm that improved performance is due to meaningful biological structure, not random variation.</li>
+                <li><span class="font-bold">Negative Controls</span> Evaluate conditional models by running negative control experiments (e.g., training on random cluster assignments) to confirm that improved performance is due to meaningful biological structure, not random variation.</li>
             </ol>
         </div>
     </div>
@@ -592,5 +592,6 @@
 </script>
 </body>
 </html>
+
 
 
