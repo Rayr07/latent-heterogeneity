@@ -3,596 +3,330 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Latent Heterogeneity in Multimodal Survival Prediction | PBL 2026</title>
-
+<title>Latent Heterogeneity | Multimodal Survival Prediction</title>
 <script src="https://cdn.tailwindcss.com"></script>
-
 <style>
-    * {
-        scroll-behavior: smooth;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
     body {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        color: #0f172a;
-        overflow-x: hidden;
+        font-family: 'Inter', sans-serif;
+        background-color: #f8fafc; /* very light slate/white */
+        color: #1e293b;
     }
-
-    .glass {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .glass:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 50px rgba(16, 185, 129, 0.15);
-        border-color: #10b981;
-    }
-
-    .gradient-text {
-        background: linear-gradient(90deg, #10b981, #059669);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .nav-link {
-        position: relative;
-        transition: color 0.3s ease;
-    }
-
-    .nav-link::after {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 2px;
-        bottom: -4px;
-        left: 0;
-        background: #10b981;
-        transition: width 0.3s ease;
-    }
-
-    .nav-link:hover::after {
-        width: 100%;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes slideInLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-50px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translateX(50px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @keyframes pulse-glow {
-        0%, 100% {
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-        }
-        50% {
-            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-        }
-    }
-
-    .animate-in-up {
-        animation: fadeInUp 0.6s ease forwards;
-    }
-
-    .animate-in-left {
-        animation: slideInLeft 0.6s ease forwards;
-    }
-
-    .animate-in-right {
-        animation: slideInRight 0.6s ease forwards;
-    }
-
-    .stat-card {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
-        transition: left 0.5s ease;
-    }
-
-    .stat-card:hover::before {
-        left: 100%;
-    }
-
     
-    .highlight-box {
-        background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
-        border-left: 4px solid #10b981;
+    h1, h2, h3, h4, .serif {
+        font-family: 'Lora', serif;
     }
 
-    .sticky-nav {
-        position: sticky;
-        top: 0;
-        z-index: 40;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-
-    .mobile-menu {
-        display: none;
-        position: fixed;
-        top: 70px;
-        left: 0;
-        right: 0;
+    .card {
         background: white;
-        border-bottom: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    }
+
+    .accent-bg {
+        background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+    }
+    
+    .nav-link {
+        color: #475569;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+        color: #059669; /* emerald-600 */
+    }
+
+    /* Figures */
+    figure {
+        margin: 2rem 0;
+        text-align: center;
+        background: white;
         padding: 1rem;
-        z-index: 40;
-        animation: slideDown 0.3s ease;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    figure img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.5rem;
+    }
+    
+    figcaption {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-top: 1rem;
+        font-family: 'Lora', serif;
+        font-style: italic;
     }
 
-    .mobile-menu.active {
-        display: block;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .pdf-container {
+        width: 100%;
+        height: 800px;
+        border: none;
     }
 </style>
 </head>
+<body class="antialiased selection:bg-emerald-200 selection:text-emerald-900">
 
-<body>
-
-<!-- NAVBAR -->
-<nav class="sticky-nav px-8 py-4 flex justify-between items-center">
-    <a href="#top" class="text-xl font-bold text-green-700 hover:text-green-600 transition">
-        PBL 2026
-    </a>
-
-    <div class="hidden md:flex gap-8 text-sm font-semibold">
-        <a href="#problem" class="nav-link text-slate-700 hover:text-green-600">Problem</a>
-        <a href="#literature" class="nav-link text-slate-700 hover:text-green-600">Literature</a>
-        <a href="#methodology" class="nav-link text-slate-700 hover:text-green-600">Methodology</a>
-        <a href="#results" class="nav-link text-slate-700 hover:text-green-600">Results</a>
-        <a href="#conclusion" class="nav-link text-slate-700 hover:text-green-600">Conclusion</a>
+<!-- Navigation -->
+<nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 py-4">
+    <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+        <div class="font-bold text-xl text-emerald-800 tracking-tight serif">PBL<span class="text-emerald-500">2026</span></div>
+        <div class="hidden md:flex space-x-8">
+            <a href="#introduction" class="nav-link text-sm">Introduction</a>
+            <a href="#methods" class="nav-link text-sm">Methods</a>
+            <a href="#results" class="nav-link text-sm">Results</a>
+            <a href="#conclusion" class="nav-link text-sm">Conclusion</a>
+            <a href="#paper" class="nav-link text-sm px-4 py-2 bg-emerald-600 text-white hover:text-white rounded-full hover:bg-emerald-700 transition">Read Paper</a>
+        </div>
     </div>
-
-    <button class="md:hidden text-2xl text-green-700" id="mobileMenuBtn" onclick="toggleMobileMenu()">
-        ☰
-    </button>
 </nav>
 
-<div class="mobile-menu" id="mobileMenu">
-    <div class="flex flex-col gap-4">
-        <a href="#problem" class="text-slate-700 font-semibold hover:text-green-600">Problem</a>
-        <a href="#literature" class="text-slate-700 font-semibold hover:text-green-600">Literature</a>
-        <a href="#methodology" class="text-slate-700 font-semibold hover:text-green-600">Methodology</a>
-        <a href="#results" class="text-slate-700 font-semibold hover:text-green-600">Results</a>
-        <a href="#conclusion" class="text-slate-700 font-semibold hover:text-green-600">Conclusion</a>
-    </div>
-</div>
+<main class="max-w-6xl mx-auto px-6 pt-16 pb-24 space-y-24">
 
-<main class="max-w-6xl mx-auto px-6 pt-20 pb-20 space-y-28">
-
-<!-- HERO -->
-<section id="top" class="text-center py-20 animate-in-up">
-    <div class="inline-block px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-full mb-8">
-        <span class="text-sm font-semibold text-green-700">
-            23FE10CSE00240
-        </span>
-    </div>
-
-    <h1 class="text-5xl md:text-7xl font-extrabold mb-8 leading-tight">
-        <span class="gradient-text">
-            Latent Heterogeneity in Multimodal Survival Prediction
-        </span>
-    </h1>
-
-    <p class="text-slate-600 max-w-3xl mx-auto text-lg mb-8 leading-relaxed">
-        A diagnostic investigation uncovering why survival models show instability—revealing that it stems from <span class="font-semibold text-green-700">latent patient heterogeneity</span> rather than model limitations.
-    </p>
-
-    <div class="flex flex-col md:flex-row items-center justify-center gap-6 mt-12">
-        <div class="text-center">
-            <p class="text-sm text-slate-500 font-semibold mb-1">Student</p>
-            <p class="text-slate-800 font-bold">Rishika Ray</p>
+    <!-- Hero Section -->
+    <section class="text-center space-y-8 animate-fade-in">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-semibold uppercase tracking-wider mb-4">
+            Research Diagnostic Series
         </div>
-        <div class="hidden md:block w-px h-8 bg-slate-300"></div>
-        <div class="text-center">
-            <p class="text-sm text-slate-500 font-semibold mb-1">Institution</p>
-            <p class="text-slate-800 font-bold">Manipal University Jaipur</p>
-        </div>
-        <div class="hidden md:block w-px h-8 bg-slate-300"></div>
-        <div class="text-center">
-            <p class="text-sm text-slate-500 font-semibold mb-1">Guide</p>
-            <p class="text-slate-800 font-bold">Dr. Sayar Singh Shekhawat</p>
-        </div>
-    </div>
-</section>
+        
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-slate-900 max-w-4xl mx-auto">
+            Uncovering Latent Heterogeneity in <br>
+            <span class="text-emerald-700">Multimodal Survival Prediction</span>
+        </h1>
 
-<!-- PROBLEM -->
-<section id="problem" class="space-y-10">
-    <h2 class="text-4xl font-extrabold text-center text-green-700 mb-16">
-        The Problem
-    </h2>
-
-    <div class="grid md:grid-cols-2 gap-10">
-        <div class="glass p-8 rounded-3xl animate-in-left" style="animation-delay: 0.1s">
-            <div class="mb-6">
-                <h3 class="text-2xl font-bold mb-2 text-green-700">Inconsistent Performance</h3>
-                <p class="text-slate-500 text-sm">Models show extreme variability across validation splits</p>
-            </div>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                Multimodal survival models often report strong average performance (C-index), yet exhibit significant variability across validation splits—sometimes performing near random. This instability raises critical concerns about reliability in clinical settings where consistent predictions are essential.
-            </p>
-        </div>
-
-        <div class="glass p-8 rounded-3xl animate-in-right" style="animation-delay: 0.2s">
-            <div class="mb-6">
-                <h3 class="text-2xl font-bold mb-2 text-green-700">Our Hypothesis</h3>
-                <p class="text-slate-500 text-sm">Latent heterogeneity, not technical artifacts</p>
-            </div>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                Instability reflects <span class="font-semibold text-green-700">latent biological heterogeneity</span> within patient populations. Heterogeneous diseases like cancer have multiple survival mechanisms. A single global model learns an "average" that doesn't generalize to subgroups. Predictability is conditional on underlying patient subgroups.
-            </p>
-        </div>
-    </div>
-</section>
-
-<!-- LITERATURE -->
-<section id="literature" class="space-y-10">
-    <h2 class="text-4xl font-extrabold text-center text-green-700 mb-16">
-        Literature Review
-    </h2>
-
-    <div class="space-y-6">
-        <div class="glass p-8 rounded-2xl animate-in-up" style="animation-delay: 0.1s">
-            <h3 class="text-xl font-bold text-green-700 mb-4">Multimodal Survival Prediction</h3>
-            <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                Prior work has demonstrated that integrating histopathology images with genomic data (RNA-seq) significantly improves survival prediction compared to unimodal approaches. Seminal studies by Mobadersany et al. (2018) and Cheerla & Gevaert (2019) highlight the complementary nature of morphological features (from histology) and molecular features (from genomics). These works established that multimodal approaches can capture patient heterogeneity better than single-modality methods.
-            </p>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                However, existing literature primarily focuses on improving mean performance metrics (C-index, AUC) and does not thoroughly analyze variability or robustness across different patient subgroups. The instability problem in survival models remains largely underexplored, with most studies assuming that performance inconsistency is a technical limitation rather than a signal of underlying biological structure.
-            </p>
-        </div>
-
-        <div class="glass p-8 rounded-2xl animate-in-up" style="animation-delay: 0.2s">
-            <h3 class="text-xl font-bold text-green-700 mb-4">Attention Mechanisms and Transformer Architectures</h3>
-            <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                Recent advances in deep learning have introduced transformer-based architectures to medical imaging and survival analysis. These models use multi-head self-attention and cross-attention mechanisms to capture complex interactions between modalities. Cross-attention specifically enables the model to learn conditional relationships where one modality (e.g., histopathology) gates or influences the encoding of another modality (e.g., genomics).
-            </p>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                The theoretical appeal of transformers is their increased representational capacity—they can learn more expressive functions than simpler architectures. Yet, evaluation of these models remains centered on aggregate metrics, and there is limited investigation of what these learned representations actually encode. Specifically, whether attention-based models inadvertently discover and encode patient subgroups in their intermediate representations is unexplored.
-            </p>
-        </div>
-
-        <div class="glass p-8 rounded-2xl highlight-box animate-in-up" style="animation-delay: 0.3s">
-            <h3 class="text-xl font-bold text-green-700 mb-4">Research Gap and Novelty</h3>
-            <p class="text-slate-700 leading-relaxed text-justify font-medium">
-                Existing studies implicitly assume that a single, globally applicable survival function exists for all patients. Under this assumption, instability in model performance is treated as noise that should be minimized through better hyperparameters or architectures. However, in heterogeneous diseases like cancer, this assumption may be fundamentally violated.
-            </p>
-            <p class="text-slate-700 leading-relaxed text-justify font-medium mt-4">
-                Our work addresses this gap by treating instability not as a limitation but as a diagnostic signal. We investigate whether the performance variability observed in multimodal survival models actually reflects the presence of latent patient heterogeneity. If so, instability becomes a feature that can guide us toward discovering meaningful patient subgroups. This paradigm shift—from viewing instability as noise to viewing it as information—is the core novelty of this research.
-            </p>
-        </div>
-    </div>
-</section>
-
-<!-- METHODOLOGY -->
-<section id="methodology" class="space-y-10">
-    <h2 class="text-4xl font-extrabold text-center text-green-700 mb-16">
-        Methodology
-    </h2>
-
-    <div class="space-y-8 mb-12">
-        <div class="glass p-8 rounded-2xl animate-in-up" style="animation-delay: 0.1s">
-            <h3 class="text-xl font-bold text-green-700 mb-4">Dataset: TCGA-BRCA Cohort</h3>
-            <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                Experiments were conducted on the TCGA (The Cancer Genome Atlas) Breast Cancer (BRCA) cohort conisisting of patients with paired multimodal data:
-            </p>
-            <ul class="list-disc ml-6 text-slate-600 space-y-2 mb-4">
-                <li><span class="font-semibold">RNA Sequencing Data:</span> Gene expression profiles representing the genomic/molecular state of each tumor</li>
-                <li><span class="font-semibold">Histopathology Whole-Slide Images (WSI):</span> High-resolution digital pathology images capturing tumor morphology and tissue architecture</li>
-                <li><span class="font-semibold">Clinical Outcomes:</span> Survival time and event status (censoring) for prognostic modeling</li>
-            </ul>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                This dataset is particularly challenging for survival modeling because it is <span class="font-semibold">event-limited</span>. The low event rate makes it difficult to train robust global models and increases the importance of efficient representation learning. RNA expression data was preprocessed into 128-dimensional PCA embeddings to reduce dimensionality while retaining variance. Histopathology images were tokenized into patch-level feature vectors using a pre-trained vision encoder, with 8 randomly sampled tokens selected per patient to balance computational efficiency and information capture.
-            </p>
-        </div>
-
-        <div class="glass p-8 rounded-2xl animate-in-up" style="animation-delay: 0.2s">
-            <h3 class="text-xl font-bold text-green-700 mb-4">Model Architecture: Multimodal Transformer</h3>
-            <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                We employed a transformer-based architecture specifically designed for multimodal survival prediction. The model processes image and genomic modalities through a hierarchical attention mechanism:
-            </p>
-            <div class="bg-slate-50 border-l-4 border-green-700 p-6 rounded text-slate-700 space-y-3 text-sm mb-4">
-                <p><span class="font-semibold">1. Image Encoder (Self-Attention):</span> The 8 image patch tokens are processed through multi-head self-attention layers. This allows the model to learn spatial relationships between patches and aggregate morphological information across the tissue region represented in the histopathology image.</p>
-                <p><span class="font-semibold">2. Cross-Attention Fusion:</span> Image representations (from self-attention) are used to condition the encoding of genomic (RNA) features through cross-attention mechanisms. Specifically, image features act as queries while RNA features act as keys and values, enabling the model to learn how morphological features gate or modulate molecular features for survival prediction.</p>
-                <p><span class="font-semibold">3. Risk Score Output:</span> The fused multimodal representation is passed through a final layer that outputs a scalar risk score per patient. This score represents the model's estimate of patient prognostic risk.</p>
-                <p><span class="font-semibold">4. Loss Function:</span> Training uses Cox partial likelihood, a standard loss for survival analysis that handles censored data and does not require explicit event time prediction.</p>
-            </div>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                The key design choice is the bidirectional cross-attention: images inform RNA encoding, enabling the model to discover subtle interactions between morphological and molecular phenotypes.
-            </p>
-        </div>
-
-        <div class="glass p-8 rounded-2xl highlight-box animate-in-up" style="animation-delay: 0.3s">
-            <h3 class="text-xl font-bold text-green-700 mb-4">Diagnostic Pipeline</h3>
-            <p class="text-slate-700 leading-relaxed text-justify font-medium mb-4">
-                To investigate heterogeneity as the source of instability, we designed a systematic diagnostic pipeline:
-            </p>
-            <ol class="list-decimal ml-6 text-slate-700 space-y-3 font-medium">
-                <li><span class="font-bold">Global Model Training:</span> Train the multimodal survival model on the full cohort using k-fold cross-validation to quantify performance variability across splits (C-index). This establishes the baseline instability problem.</li>
-                <li><span class="font-bold">Embedding Extraction:</span> Extract the latent multimodal embeddings (from the fused representation layer) for all patients without using survival labels. These unsupervised embeddings represent the joint image-RNA feature space learned by the model.</li>
-                <li><span class="font-bold">Unsupervised Clustering:</span> Apply K-Means clustering (K=2) to the embeddings to discover latent patient subgroups. K=2 is chosen based on the hypothesis of at least two distinct survival-generating mechanisms in the heterogeneous cancer population. No survival labels are used during clustering.</li>
-                <li><span class="font-bold">Cluster Stability Assessment:</span> Evaluate the robustness of clustering using Adjusted Rand Index (ARI) across multiple K-Means initializations. High ARI indicates the discovered clusters are stable and reproducible, not artifacts of random initialization.</li>
-                <li><span class="font-bold">Conditional Model Retraining:</span> Retrain survival models separately within each discovered subgroup. If heterogeneity is the root cause of instability, conditional models should show significantly improved and consistent performance within subgroups.</li>
-                <li><span class="font-bold">Negative Controls</span> Evaluate conditional models by running negative control experiments (e.g., training on random cluster assignments) to confirm that improved performance is due to meaningful biological structure, not random variation.</li>
-            </ol>
-        </div>
-    </div>
-
-    <!-- Result Visualization Placeholders -->
-    <div class="grid md:grid-cols-2 gap-8 mt-12">
-        <div class="glass p-8 rounded-2xl">
-            <h4 class="font-bold text-green-700 mb-4">Architecture Overview</h4>
-            <img src="Pictures/architecture overview.png" alt="Model Architecture Diagram" class="w-full h-auto rounded-lg shadow-md object-cover">
-        </div>
-        <div class="glass p-8 rounded-2xl">
-            <h4 class="font-bold text-green-700 mb-4">Pipeline Flow</h4>
-            <img src="Pictures/flow diagram.png" alt="Pipeline Flowchart" class="w-full h-auto rounded-lg shadow-md object-cover mt-20">
-        </div>
-    </div>
-</section>
-
-<!-- RESULTS -->
-<section id="results" class="space-y-12">
-    <h2 class="text-4xl font-extrabold text-center text-green-700 mb-16">
-        Results & Findings
-    </h2>
-
-    <div class="space-y-6">
-        <div class="glass p-8 rounded-3xl animate-in-up" style="animation-delay: 0.1s">
-            <h3 class="font-bold text-lg text-slate-800 mb-4">1. Global Model Exhibits Extreme Variability</h3>
-            <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                When training the multimodal survival model on the full TCGA-BRCA cohort using 5-fold cross-validation, we observed substantial performance variability across validation splits. Specifically, the concordance index (C-index) ranged from <span class="font-semibold">0.45 to 0.72</span> across folds, indicating highly unstable and unreliable predictions. This wide variance is problematic because a clinician cannot trust which fold's model would perform well on new patients—the model might perform adequately on some validation sets but near random on others.
-            </p>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                This instability was consistent despite identical training procedures, hyperparameters, and data preprocessing. The problem cannot be attributed to simple randomness or hyperparameter tuning, suggesting a deeper structural issue with the modeling approach itself.
-            </p>
-        </div>
-
-        <div class="glass p-8 rounded-3xl animate-in-up" style="animation-delay: 0.2s">
-            <h3 class="font-bold text-lg text-slate-800 mb-4">2. Unsupervised Clustering Reveals Two Stable Patient Subgroups</h3>
-            <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                We extracted the latent multimodal embeddings from the fusion layer of our trained model (without using any survival labels) and applied K-Means clustering with K=2. Remarkably, this unsupervised clustering discovered two distinct patient subgroups with dramatically different prognostic profiles:
-            </p>
-            <div class="bg-slate-50 border-l-4 border-green-700 p-6 rounded text-slate-700 space-y-2 mb-4">
-                <p><span class="font-bold">Cluster 1:</span> event rate: 11%</p>
-                <p><span class="font-bold">Cluster 2:</span> event rate: 31% </p>
-            </div>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                The <span class="font-semibold">2.8-fold difference in event rates</span> between clusters is substantial and highly significant. Critically, the clustering used only imaging and genomic modalities—survival labels were never provided. This demonstrates that the learned multimodal representations naturally encode meaningful prognostic structure and patient stratification, even without explicit supervision.
-            </p>
-        </div>
-
-        <div class="glass p-8 rounded-3xl animate-in-up" style="animation-delay: 0.3s">
-            <h3 class="font-bold text-lg text-slate-800 mb-4">3. Kaplan-Meier Analysis Confirms Survival Separation</h3>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                Kaplan-Meier survival curves computed for the two discovered clusters show <span class="font-semibold">clear visual and statistical separation</span>. The lower-risk cluster (Cluster 1, 11% event rate) exhibits substantially longer median survival compared to the higher-risk cluster (Cluster 2, 31% event rate). Although the exact log-rank test p-value depends on censoring patterns, the visual separation is pronounced, indicating that the clustering captures genuine biological heterogeneity.
-            </p>
-        </div>
-    </div>
-
-    <!-- Result Visualization Placeholders -->
-    <div class="grid md:grid-cols-2 gap-8 my-10">
-        <div class="glass p-8 rounded-2xl">
-            <h4 class="font-bold text-green-700 mb-4">Global Model Performance Variability</h4>
-            <img src="Pictures/globalmodelvariance.png" alt="Global Model Performance Variability" class="w-full h-auto rounded-lg shadow-md object-cover">
-        </div>
-        <div class="glass p-8 rounded-2xl">
-            <h4 class="font-bold text-green-700 mb-4">Kaplan-Meier Survival Curves</h4>
-            <img src="Pictures/km survival.png" alt="Kaplan-Meier Survival Curves" class="w-full h-auto rounded-lg shadow-md object-cover">
-        </div>
-    </div>
-
-    <div class="space-y-6 mt-12">
-        <div class="glass p-8 rounded-3xl animate-in-up" style="animation-delay: 0.4s">
-            <h3 class="font-bold text-lg text-slate-800 mb-4">4. Clustering Stability (High Adjusted Rand Index)</h3>
-            <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                A critical question is whether the two clusters discovered are reproducible or mere artifacts of K-Means initialization randomness. To assess robustness, we ran K-Means clustering 50 times with different random initializations and computed the Adjusted Rand Index (ARI) between all pairs of clustering solutions.
-            </p>
-            <p class="text-slate-600 leading-relaxed text-justify mb-4">
-                Results showed <span class="font-semibold">high pairwise ARI (mean > 0.90)</span>, indicating that the discovered clusters are highly stable and reproducible across initializations. This robustness strongly argues against the clusters being random artifacts. The same two subgroups emerge consistently, regardless of initialization, suggesting they reflect real structure in the multimodal embedding space.
-            </p>
-            <p class="text-slate-600 leading-relaxed text-justify">
-                We also performed negative control experiments: clustering on randomly shuffled survival labels and clustering on Gaussian random embeddings. Both controls yielded unstable, non-reproducible clusters with low ARI, confirming that the stability of our discovered clusters is meaningful.
-            </p>
-        </div>
-
-        <div class="glass p-8 rounded-3xl highlight-box animate-in-up" style="animation-delay: 0.5s">
-            <h3 class="font-bold text-lg text-green-900 mb-4">5. Conditional Survival Models Show High, Stable Performance</h3>
-            <p class="text-green-900 leading-relaxed text-justify font-medium mb-4">
-                The central hypothesis was that instability stems from forcing a single global model to handle heterogeneous populations. If this is true, retraining models separately within each discovered subgroup should yield improved and stable performance. This is exactly what we observe:
-            </p>
-            <div class="bg-white bg-opacity-50 border-l-4 border-green-700 p-6 rounded text-slate-700 space-y-3 font-medium">
-                <p><span class="font-bold">Cluster 1 (lower-risk):</span> C-index mean = 0.82, std = 0.08 (highly stable)</p>
-                <p><span class="font-bold">Cluster 2 (higher-risk):</span> C-index mean = 0.76, std = 0.12 (stable)</p>
-                <p><span class="font-bold">Global model (pooled):</span> C-index mean = 0.59, std = 0.13 (unstable)</p>
-            </div>
-            <p class="text-green-900 leading-relaxed text-justify font-medium mt-4">
-                Conditional models achieve both higher mean performance and lower variance compared to the global model. This demonstrates that <span class="font-bold">heterogeneity, not model limitations, was the root cause of instability</span>. Furthermore, Cluster 1 model outperforms Cluster 2 model, which is expected given the lower event rate and more predictable outcome in Cluster 1.
-            </p>
-        </div>
-    </div>
-
-    <!-- Additional Visualization Placeholders -->
-    <div class="grid md:grid-cols-2 gap-8 my-10">
-        <div class="glass p-8 rounded-2xl">
-            <h4 class="font-bold text-green-700 mb-4">Clustering Stability Heatmap (ARI)</h4>
-            <img src="Pictures/ari.png" alt="Clustering Stability Heatmap" class="w-full h-auto rounded-lg shadow-md object-cover">
-        </div>
-        <div class="glass p-8 rounded-2xl">
-            <h4 class="font-bold text-green-700 mb-4">Performance Comparison (Global vs Conditional)</h4>
-            <img src="Pictures/globalvsconditional.png" alt="Performance Comparison" class="w-full h-auto rounded-lg shadow-md object-cover">
-        </div>
-    </div>
-
-</section>
-
-<!-- CONCLUSION -->
-<section id="conclusion" class="py-20">
-    <div class="glass p-12 rounded-3xl border-l-4 border-green-700 bg-gradient-to-r from-green-50 to-emerald-50 animate-in-up">
-        <h2 class="text-3xl font-bold text-green-700 mb-6">
-            Conclusion
-        </h2>
-        <div class="space-y-4 text-slate-700">
-            <p class="text-lg leading-relaxed">
-                This research reframes model instability as a <span class="font-semibold text-green-700">diagnostic signal of latent biological heterogeneity</span> rather than a technical failure. We demonstrate that:
-            </p>
-            <ul class="space-y-3 ml-6 text-slate-600">
-                <li class="flex gap-3">
-                    <span class="text-green-600 font-bold flex-shrink-0">•</span>
-                    <span>Multimodal representations <strong>naturally encode patient stratification</strong> without explicit supervision</span>
-                </li>
-                <li class="flex gap-3">
-                    <span class="text-green-600 font-bold flex-shrink-0">•</span>
-                    <span>Conditional survival modeling within subgroups <strong>outperforms global approaches</strong></span>
-                </li>
-                <li class="flex gap-3">
-                    <span class="text-green-600 font-bold flex-shrink-0">•</span>
-                    <span>This suggests future models should be <strong>subgroup-aware</strong> rather than forcing a single global function</span>
-                </li>
-            </ul>
-            <p class="text-lg leading-relaxed mt-6">
-                <strong>Clinical Impact:</strong> In precision medicine, recognizing patient heterogeneity is essential. This work provides a framework for identifying when instability signals meaningful biological structure, enabling more reliable and interpretable survival predictions.
-            </p>
-        </div>
-    </div>
-</section>
-
-<!-- CODE SECTION -->
-<section class="py-20 text-center">
-    <div class="glass p-12 rounded-3xl border-2 border-green-700 bg-gradient-to-b from-white to-green-50 max-w-2xl mx-auto">
-        <h3 class="text-3xl font-extrabold text-green-700 mb-6">Code Available on GitHub</h3>
-        <a href="https://github.com/Rayr07/latent-heterogeneity" target="_blank" class="inline-block px-10 py-4 bg-green-700 text-white rounded-lg font-bold text-lg hover:bg-green-800 transition transform hover:scale-105 mb-6">
-            View on GitHub
-        </a>
-        <p class="text-sm text-slate-500">
-            github.com/Rayr07/latent-heterogeneity
+        <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            A diagnostic investigation into cancer prognostication, uncovering why deep fusion models behave unstably and revealing latent biological sub-groups.
         </p>
-    </div>
-</section>
+
+        <div class="flex flex-wrap justify-center gap-4 text-sm text-slate-700 pt-8">
+            <div class="card px-6 py-4 flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                </div>
+                <div class="text-left">
+                    <p class="font-bold text-slate-900">Rishika Ray</p>
+                    <p class="text-xs text-slate-500">Student</p>
+                </div>
+            </div>
+            
+            <div class="card px-6 py-4 flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <div class="text-left">
+                    <p class="font-bold text-slate-900">Manipal University Jaipur</p>
+                    <p class="text-xs text-slate-500">Institution</p>
+                </div>
+            </div>
+
+            <div class="card px-6 py-4 flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                </div>
+                <div class="text-left">
+                    <p class="font-bold text-slate-900">Dr. Sayar Singh Shekhawat</p>
+                    <p class="text-xs text-slate-500">Research Guide</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pt-6">
+            <a href="https://github.com/Rayr07/latent-heterogeneity" target="_blank" class="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-800 font-semibold group">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                View Repository
+                <span class="transform group-hover:translate-x-1 transition-transform">→</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Abstract Card (Stand out) -->
+    <section class="max-w-4xl mx-auto relative">
+        <div class="absolute inset-0 bg-emerald-600 transform rounded-2xl rotate-1 opacity-10"></div>
+        <div class="card p-8 md:p-12 relative z-10 border-t-4 border-t-emerald-500">
+            <h2 class="text-2xl font-bold text-emerald-900 mb-6 flex items-center gap-3 serif">
+                <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Abstract
+            </h2>
+            <p class="text-slate-700 leading-relaxed text-justify">
+                Multimodal deep learning models for cancer survival prediction frequently exhibit unstable and irreproducible performance, limiting their clinical applicability. Rather than proposing a new predictive architecture, this work presents a diagnostic investigation into the sources of this instability. Using a transformer-based deep fusion model combining RNA sequencing and histopathology data from the TCGA-BRCA cohort, we demonstrate that global survival prediction is highly unstable across data splits. We then analyze the learned multimodal embeddings in an unsupervised manner, revealing stable latent patient subgroups with significantly divergent survival outcomes. These findings indicate that survival predictability is conditional on latent heterogeneity and suggest that heterogeneity-aware modeling strategies are essential for robust multimodal prognostication.
+            </p>
+        </div>
+    </section>
+
+    <!-- Content Split: Intro & Problem -->
+    <section id="introduction" class="grid md:grid-cols-2 gap-8">
+        <div class="card p-8 bg-white">
+            <h3 class="text-xl font-bold text-slate-900 mb-4 serif">I. Introduction</h3>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                The estimation of a patient's future clinical outcome based on biological, pathological, and clinical data is known as cancer prognostication. Multimodal deep learning has emerged as a potential paradigm since no single data modality can adequately capture tumour biology complexity.
+            </p>
+            <p class="text-slate-600 leading-relaxed">
+                By integrating RNA sequencing (transcriptional programs) and histopathology images (spatial organisation), we aim to produce more accurate survival predictions. However, the translation into reliable clinical tools remains limited.
+            </p>
+        </div>
+        
+        <div class="card p-8 accent-bg border-emerald-200">
+            <h3 class="text-xl font-bold text-emerald-900 mb-4 serif">II. The Core Problem</h3>
+            <p class="text-emerald-800 leading-relaxed mb-4">
+                Multimodal fusion models suffer from severe performance instability across validation splits. While some folds achieve moderately high C-index values, others fail completely.
+            </p>
+            <p class="text-emerald-800 leading-relaxed font-medium">
+                Rather than framing this as a model limitation, we hypothesize that global instability is a diagnostic signal of <span class="bg-emerald-200/60 px-1 rounded text-emerald-900">latent biological heterogeneity</span>. Tumors have divergent growth dynamics that a single global algorithm simply cannot generalize securely.
+            </p>
+        </div>
+    </section>
+
+    <!-- Methodology -->
+    <section id="methods" class="max-w-4xl mx-auto space-y-8">
+        <div class="text-center">
+            <span class="text-emerald-600 font-bold uppercase tracking-widest text-sm">Methodology</span>
+            <h2 class="text-3xl font-bold text-slate-900 mt-2 serif">Diagnostic Investigation Pipeline</h2>
+        </div>
+
+        <figure class="card p-4">
+            <img src="Pictures/flow diagram.png" alt="Diagnostic Pipeline Flow Diagram" class="w-full">
+            <figcaption>Fig 1. Overview of the diagnostic multimodal survival modeling pipeline.</figcaption>
+        </figure>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="card p-8">
+                <h4 class="font-bold text-lg text-slate-900 mb-3 serif">Dataset Profile</h4>
+                <p class="text-slate-600 text-sm leading-relaxed mb-4">
+                    Analyzed using the TCGA-BRCA cohort. Evaluation strictly on an event-limited dataset representing 193 patients against 29 recorded death events.
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex gap-3 text-sm text-slate-700">
+                        <span class="text-emerald-500 font-bold">→</span> 
+                        <span><strong class="text-slate-900">RNA-Seq Genomics:</strong> 128-dimensional PCA embeddings of normalized gene expressions.</span>
+                    </li>
+                    <li class="flex gap-3 text-sm text-slate-700">
+                        <span class="text-emerald-500 font-bold">→</span> 
+                        <span><strong class="text-slate-900">Whole Slide Imaging:</strong> CNN processed into 2048-dim vectors. K=8 tokens sampled.</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card p-8">
+                <h4 class="font-bold text-lg text-slate-900 mb-3 serif">Transformer Architecture</h4>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Our hierarchical transformer utilizes image tokens as queries through multi-head self-attention. Deep fusion occurs safely within the cross-attention plane linking morphology directly to molecular key/values, optimizing against a Cox partial likelihood for events.
+                </p>
+            </div>
+        </div>
+
+        <figure class="card p-4">
+            <img src="Pictures/architecture overview.png" alt="Architecture diagram" class="w-full">
+            <figcaption>Fig 2. Architecture of the Multimodal Survival Transformer.</figcaption>
+        </figure>
+    </section>
+
+    <!-- Results (Cards grid) -->
+    <section id="results" class="space-y-12 bg-emerald-50/50 rounded-3xl p-8 md:p-12 -mx-8 md:-mx-12 border border-emerald-100">
+        <div class="text-center max-w-2xl mx-auto">
+            <span class="text-emerald-600 font-bold uppercase tracking-widest text-sm">Findings</span>
+            <h2 class="text-3xl font-bold text-slate-900 mt-2 mb-4 serif">Results & Analytics</h2>
+            <p class="text-slate-600">Exploring the metrics and biological structures extracted during diagnosis.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-2 gap-8 items-start">
+            
+            <!-- Result 1 -->
+            <div class="card p-8 self-stretch flex flex-col">
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold mb-6">1</div>
+                <h3 class="text-xl font-bold text-slate-900 mb-4 serif">Global Multimodal Instability</h3>
+                <p class="text-slate-600 text-sm mb-6 flex-grow leading-relaxed">
+                    Naive 5-fold cross-validation on the heterogeneous full cohort yielded extreme C-index variance spanning from random performance (0.45) up into competitive boundaries (0.72). A single global target cannot resolve this divergence cleanly.
+                </p>
+                <img src="Pictures/globalmodelvariance.png" alt="C-index variance" class="rounded-lg border border-slate-200">
+            </div>
+
+            <!-- Result 2 -->
+            <div class="card p-8 self-stretch flex flex-col">
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold mb-6">2</div>
+                <h3 class="text-xl font-bold text-slate-900 mb-4 serif">Unsupervised Clustering</h3>
+                <p class="text-slate-600 text-sm mb-6 flex-grow leading-relaxed">
+                    Analyzing the deep fusion structures entirely blindly cleanly retrieved two heavily stratified subpopulations. Cluster 0 showed 11% event rate, while Cluster 1 showed a 31% rapid event rate.
+                </p>
+                <img src="Pictures/km survival.png" alt="Kaplan Meier curve" class="rounded-lg border border-slate-200">
+            </div>
+
+            <!-- Result 3 -->
+            <div class="card p-8 self-stretch flex flex-col">
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold mb-6">3</div>
+                <h3 class="text-xl font-bold text-slate-900 mb-4 serif">Biological Fusion Evidence</h3>
+                <p class="text-slate-600 text-sm mb-6 flex-grow leading-relaxed">
+                    Unimodal matrices alongside naive concatenation exhibited near-zero ARI capability. The subgroups are heavily driven by higher MKI67 levels (cellular proliferation marker) in Cluster 1.
+                </p>
+                <div class="flex gap-4">
+                    <img src="Pictures/ari.png" alt="ARI Index" class="rounded-lg border border-slate-200 w-1/2 object-contain bg-white">
+                    <img src="Pictures/boxplot.png" alt="Boxplot" class="rounded-lg border border-slate-200 w-1/2 object-contain bg-white">
+                </div>
+            </div>
+
+            <!-- Result 4 -->
+            <div class="card p-8 self-stretch flex flex-col bg-emerald-800 text-white border-emerald-900">
+                <div class="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold mb-6">4</div>
+                <h3 class="text-xl font-bold mb-4 text-emerald-50 serif">Conditional Predictability</h3>
+                <p class="text-emerald-100 text-sm mb-6 flex-grow leading-relaxed">
+                    By enforcing training iteratively upon homogeneous subgroups alone (tracking Cluster 0), the C-index sharply collapsed into a consistently high, stabilized peak. Predictability is restored when heterogeneity is modelled out.
+                </p>
+                <img src="Pictures/globalvsconditional.png" alt="Conditional Model Peak" class="rounded-lg border border-emerald-700 bg-white p-1">
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Conclusion -->
+    <section id="conclusion" class="max-w-3xl mx-auto text-center py-12">
+        <h2 class="text-3xl font-bold text-slate-900 mb-6 serif">Conclusion</h2>
+        <div class="card p-10 bg-white border-l-4 border-l-emerald-500">
+            <p class="text-xl text-slate-700 leading-relaxed font-serif italic">
+                "This research definitively re-contextualizes multimodal prognostic instability from a pure technical deficiency into a communicative diagnostic symptom. Future survival engines must shift towards heterogeneity-aware pipelines—deploying multimodal fusion as a biological router before executing reliable routines on perfectly isolated populations."
+            </p>
+        </div>
+    </section>
+
+    <!-- PDF Viewer -->
+    <section id="paper" class="pt-8">
+        <div class="card p-4 bg-white">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2 serif text-lg">
+                    <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>
+                    Manuscript
+                </h3>
+                <a href="Latent_Heterogeneity.pdf" download class="text-sm font-semibold text-emerald-600 hover:text-emerald-800">Download PDF ↓</a>
+            </div>
+            <div class="rounded-lg overflow-hidden border border-slate-200 bg-slate-50 relative group">
+                <object data="Latent_Heterogeneity.pdf#view=FitH" type="application/pdf" class="pdf-container">
+                    <div class="p-10 text-center text-slate-500">
+                        <p>Your browser does not natively support PDFs.</p>
+                        <a href="Latent_Heterogeneity.pdf" download class="inline-block mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg">Download PDF</a>
+                    </div>
+                </object>
+            </div>
+        </div>
+    </section>
 
 </main>
 
-<!-- FOOTER -->
-<footer class="bg-slate-50 border-t border-slate-200 py-8 px-6 text-center text-slate-600 text-sm">
-    <p class="mb-2"><strong>Latent Heterogeneity in Multimodal Survival Prediction</strong></p>
-    <p>Manipal University Jaipur • Department of Computer Science & Engineering • 2026</p>
-    
+<footer class="border-t border-slate-200 py-10 bg-white">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+        <div class="w-12 h-1 bg-emerald-500 mx-auto mb-6 rounded-full"></div>
+        <p class="text-slate-800 font-bold mb-2">Manipal University Jaipur &copy; 2026</p>
+        <p class="text-slate-500 text-sm">Latent Heterogeneity in Multimodal Survival Prediction.</p>
+    </div>
 </footer>
 
-<script>
-    // MOBILE MENU TOGGLE
-    function toggleMobileMenu() {
-        const menu = document.getElementById('mobileMenu');
-        menu.classList.toggle('active');
-    }
-
-    // Close menu when link is clicked
-    document.querySelectorAll('#mobileMenu a').forEach(link => {
-        link.addEventListener('click', () => {
-            document.getElementById('mobileMenu').classList.remove('active');
-        });
-    });
-
-    // SMOOTH SCROLL TO TOP
-    function scrollToTop() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // INTERSECTION OBSERVER FOR ANIMATIONS
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.animation = getComputedStyle(entry.target).animation;
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    // Observe animated elements
-    document.querySelectorAll('[class*="animate-in"]').forEach(el => {
-        observer.observe(el);
-    });
-
-    // ADD SCROLL EFFECT TO NAVBAR
-    let lastScroll = 0;
-    const navbar = document.querySelector('.sticky-nav');
-    
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        if (currentScroll > 100) {
-            navbar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
-        } else {
-            navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
-        }
-        lastScroll = currentScroll;
-    });
-
-    // HOVER EFFECT FOR STAT CARDS
-    document.querySelectorAll('.stat-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-8px)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-</script>
 </body>
 </html>
-
-
-
-

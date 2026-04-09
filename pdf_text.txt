@@ -1,0 +1,1125 @@
+Uncovering Latent Heterogeneity in Multimodal
+Survival Prediction: A Diagnostic Investigation
+1stRishika Ray
+Department of Computer Science and Engineering
+Manipal University Jaipur
+Jaipur, India
+0009-0003-0928-61212ndDr Sayar Singh Shekhawat
+Department of Computer Science and Engineering
+Manipal University Jaipur
+Jaipur, India
+sayar.shekhawat@jaipur.manipal.edu
+Abstract—Multimodal deep learning models for cancer sur-
+vival prediction frequently exhibit unstable and irreproducible
+performance, limiting their clinical applicability. Rather than
+proposing a new predictive architecture, this work presents a
+diagnostic investigation into the sources of this instability. Using a
+transformer-based deep fusion model combining RNA sequencing
+and histopathology data from the TCGA-BRCA cohort, we
+demonstrate that global survival prediction is highly unstable
+across data splits. We then analyze the learned multimodal
+embeddings in an unsupervised manner, revealing stable latent
+patient subgroups with significantly divergent survival outcomes.
+These subgroups are not explained by canonical receptor status
+or immune infiltration, but instead align with tumor-intrinsic
+proliferative activity. Conditioning survival modeling on the
+largest discovered subgroup recovers strong and stable prognostic
+performance, substantially outperforming unimodal baselines.
+These findings indicate that survival predictability is conditional
+on latent heterogeneity and suggest that heterogeneity-aware
+modeling strategies are essential for robust multimodal prog-
+nostication.
+Index Terms—Multimodal learning, survival analysis, trans-
+formers, patient heterogeneity, histopathology, genomics
+I. INTRODUCTION
+The estimation of a patient’s future clinical outcome, such
+as survival time, disease progression, or recurrence risk, based
+on biological, pathological, and clinical data is known as
+cancer prognostication. Since the realisation that no single
+data modality can adequately capture the complexity of tumour
+biology, multimodal deep learning has emerged as a potential
+paradigm. Molecular profiling is a laboratory method that uses
+a sample of tissue, blood, or other body fluid to check for
+certain genes, proteins, or other molecules that may be a sign
+of a disease or condition, such as cancer. One of the technique
+includes RNA sequencing which provides transcriptional pro-
+grams, oncogenic signalling pathways, and cellular states. On
+the other hand, histopathology images encode spatial organisa-
+tion, morphological patterns, and microenvironmental context.
+Integrating these two modalities of data should produce more
+accurate survival predictions as compared to unimodal meth-
+ods [1], [2].This idea was tested out on pancancer settings
+and increasingly sophisticated fusion strategies [2], [3]. More
+recently, transformer-based attention-based architectures have
+been suggested for the construction of complex cross-modal
+interactions, thereby expanding the representational capacityof multimodal models [4]. These efforts suggest that deep
+multimodal fusion can uncover prognostically relevant signals
+that are inaccessible to individual modalities.
+The translation of multimodal survival models into reliable
+clinical tools remains limited in spite of the progress. A persis-
+tent and under-discussed problem is the instability of model
+performance shown by substantial variance of reported con-
+cordance indices across random data splits, cross-validation
+folds, or minor changes in preprocessing [5]. Although models
+achieve competitive average performance, they behave almost
+randomly in some validation sets. This undermines the confi-
+dence in their predictions [6]. This phenomenon is particularly
+seen in survival analysis, where the datasets are generally
+small, event rates are low, and the model outputs affect high
+clinical decisions [7].
+This performance instability is reduced through refinement
+of architecture, hyperparameter tuning or increased regularisa-
+tion, and is implicitly treated like a technical nuisance in most
+of the existing studies. This perspective assumes the existence
+of a single, global prognostic function for the entire patient
+cohort and that the cause of instability is mainly from insuffi-
+cient modelling capacity or suboptimal training procedures.
+This paper explores the possibility that this assumption is
+flawed for heterogeneous diseases like cancer. Instability may
+be a diagnostic signal that shows the presence of unmodelled
+patient heterogeneity [8].
+Breast cancer is a very good example of this challenge.
+It is known that breast cancer is not a single disease entity;
+it is a collection of biologically distinct subtypes with di-
+vergent molecular characteristics and clinical trajectories [9].
+These differences are present at the receptor level or gene
+expression signatures as well as in tumour morphology and
+treatment response. This implies that patients within a single
+cohort may follow fundamentally different survival-generating
+mechanisms. A global survival model trained on such a diverse
+population will learn an “average” representation. It may fit
+no subgroup well, therefore, resulting in high variance in
+performance across data splits.
+This issue is aggravated in multimodal settings. Multimodal
+fusion increases representational richness as well as model
+capacity and the effective degrees of freedom. This imbalance
+between model complexity and available outcome information
+in event-limited survival datasets like the TCGA (The Cancer
+Genome Atlas) can increase variance and overfitting [7]. But
+this does not imply that multimodal models are unsuitable for
+survival prediction. It suggests that their failure modes are
+more subtle and closely tied to the structure of the underlying
+population than is accepted.
+A related issue is the evaluation of survival models. The
+most common used metric for assessment of survival per-
+formance is the concordance index (C-index) [10]. Though
+the C-index is an important summary statistic, it collapses
+model behaviour across all patients into a single scalar
+value. In heterogeneous cohorts, this aggregation can con-
+ceal strong subgroup-specific performance and hide systemic
+failure modes. As pointed out earlier, reliance on global C-
+index values may lead to deceptive conclusions about model
+utility, in particular when performance varies substantially
+across patient subpopulations [5]. As a result, instability in
+global metrics should be used as a potential indicator of latent
+structure rather than dismissed as noise.
+Recent studies of machine learning in medical imaging are
+focusing on the importance of understanding why models
+fail [6]. These critiques argue that most of the reported
+advances are weakened by inadequate evaluation practices,
+hidden dataset biases and a lack of diagnostic analysis. In
+the context of multimodal survival prediction, there is a need
+to move beyond architecture-centric benchmarks and toward
+investigations into the relationship between model behaviour
+and underlying biological heterogeneity.
+This study adopts a diagnostic perspective. This paper
+deals with the investigation of the causes of instability in a
+standard transformer-based multimodal survival model, instead
+of proposing a novel fusion architecture or optimising for
+maximum global C-index. The main theory is that instability
+arises because survival predictability is conditional on latent
+patient heterogeneity. Deep multimodal fusion can expose
+this heterogeneity even when it fails to produce stable global
+predictions.
+To test this theory, we conduct a sequential empirical
+investigation using the TCGA Breast Invasive Carcinoma
+(TCGA-BRCA) cohort [11]. First, the global multimodal
+survival prediction is found, and its instability is explicitly
+characterised. Then, the trained model is repurposed as a
+representation learning tool. Fused multimodal embeddings are
+extracted, and unsupervised analysis is performed. This helps
+to assess whether prognostically relevant structure emerges in
+the learned interaction space or not. It should be noted that
+this analysis does not use survival outcomes, receptor status
+or clinical labels.
+The multimodal embeddings divide patients into stable
+subgroups with markedly different survival outcomes. These
+subgroups are not recoverable from unimodal representations
+or naive feature concatenation. This shows that deep mul-
+timodal fusion captures interaction-level information that is
+not visible to individual modalities. Also, the discovered
+subgroups cannot be explained by canonical breast cancer
+markers such as receptor status. Instead, it can be alignedwith tumour-intrinsic biological characteristics, particularly
+proliferative activity [9].
+Survival prediction becomes accurate and stable when con-
+ditioned on a homogeneous patient subgroup. Here, multi-
+modal modelling will substantially outperform unimodal base-
+lines. It is consistent with histopathology and molecular data
+that provide complementary prognostic information [1], [3].
+Across resampling, conditional modelling exhibits minimal
+variance. Negative control experiments confirm that instead
+of statistical artefacts, these gains reflect genuine prognostic
+signal [6].
+Together, these findings support a reframing of multimodal
+survival modelling. Instead of asking whether optimising
+global state-of-the-art performance on heterogeneous cohorts
+is sufficient [6], the more fundamental question is how
+multimodal representations encode latent biological structure.
+This structure conditions survival predictability [8], [9]. By
+shifting the focus from aggregate performance metrics toward
+diagnostic analysis [5], this work highlights the importance
+of understanding when and for whom multimodal survival
+prediction is feasible. This also motivates heterogeneity-aware
+modelling strategies as a path toward more robust and clini-
+cally meaningful prognostication.
+II. RELATEDWORK
+A. Multimodal Survival Prediction
+An active area of research is multimodal survival prediction.
+It has been motivated by the hypothesis that integrating het-
+erogeneous biomedical data sources can yield more accurate
+and biologically grounded prognostic models than unimodal
+approaches. Early work by Mobadersany et al. [1] and subse-
+quent pan-cancer analysis by Kather et al. [12] showed that
+combining histopathology images with genomic features using
+convolutional neural networks improved outcome prediction
+compared to either modality alone. This study provided one
+of the first large-scale demonstrations that complementary
+prognostic information is contained in molecular profiles and
+histological morphology.
+Subsequent work extended multimodal survival modelling
+to pancancer settings. Cheerla and Gevaert [2] proposed a deep
+learning framework integrating genomics, clinical variables,
+and imaging-derived features across multiple cancer types.
+Their results showed improved average concordance indices
+compared to unimodal baselines. This reinforces the potential
+of multimodal learning. Vale-Silva and Rohr [3] also explored
+multimodal architectures for long-term cancer survival predic-
+tion. They showed the benefits of feature fusion in deep neural
+networks.
+In spite of these promising results, most multimodal survival
+studies focus on improving global predictive performance.
+Model evaluation is done using mean C index values across
+cross-validation folds, with limited discussion of performance
+variance or subgroup-specific behaviour [6]. Therefore, the ro-
+bustness and interpretability of these models in heterogeneous
+clinical populations remain open questions. Furthermore, re-
+liance on global concordance indices can be misleading, as
+these metrics may be biased by the censoring distribution and
+fail to capture time-dependent performance variations [5].
+B. Deep Learning Models for Survival Analysis
+Along with multimodal research, numerous work was done
+on developing deep learning methods for survival analysis.
+DeepSurv [13] introduced a neural network formulation of
+the Cox proportional hazards model. The Cox proportional
+hazards model is a widely used semi-parametric regression
+technique in survival analysis that estimates the relationship
+between the time until an event occurs such as death or failure,
+and one or more explanatory variables (covariates). It models
+the hazard rate, assuming that the ratio of risks between groups
+remains constant over time. Its main assumptions are that the
+hazard ratios are constant over time, the subjects are indepen-
+dent of one another, the relationship between covariates and
+the log hazard is linear and that the censoring mechanism
+is independent of the risk of the event. DeepSurv, on the
+other hand, enables nonlinear risk modelling while preserving
+the interpretability of hazard-based survival analysis. DeepHit
+[14] proposed a discrete-time formulation. It is capable of
+modelling competing risks, thus representing a departure from
+traditional Cox-based approaches.
+Studies of deep learning for survival analysis highlight
+the diversity of proposed architectures. It includes recurrent
+networks, multitask learning, and attention-based models [7].
+These methods differ in formulation and optimisation objec-
+tives. But they all want to improve global performance metrics.
+Importantly, few studies interrogate the stability of these
+metrics across heterogeneous patient populations or explore
+whether performance variability reflects underlying biological
+structure [6], [8].
+C. Transformer-Based Fusion
+In medical applications for multimodal learning, attention
+mechanisms and transformer architectures have become very
+popular. Through self-attention and cross-attention mecha-
+nisms, transformers are a flexible framework for modelling
+interactions within and between modalities. Multi-modal sur-
+vival models leverage these capabilities to capture conditional
+relationships between histopathology, genomics, and other
+data sources.
+The PS3 framework [4] is an example. It integrates
+pathology reports, histology images, and biological pathways
+using a multimodal transformer. PS3 demonstrates improved
+survival prediction performance across multiple cancer cohorts
+by modelling interactions between modalities. Evaluation pri-
+marily centres on global performance metrics, leaving open
+questions about how learned representations behave in hetero-
+geneous populations, just like earlier approaches.
+D. Image-Based Genomic Signal Discovery
+Several studies have shown that deep learning models can
+extract molecular information directly from histopathology
+images. Kather et al. [12] showed that convolutional neural
+networks trained on WSIs (Whole Slide Images) could predictclinically actionable genetic alterations across multiple cancer
+types. These provide strong evidence that morphological pat-
+terns encode latent molecular signals.
+Multimodal frameworks like MOMA [15] also empha-
+sise explainability and cross-cohort validation in integrating
+pathology images with multi-omics data. These studies focus
+on classification or molecular inference rather than survival
+modelling. They also establish preceden for deep learning
+models uncovering non-trivial biological structure through
+multimodal integration.
+E. Patient Heterogeneity and Evaluation Pitfalls
+Biological heterogeneity is a defining feature of cancer.
+Marusyk and Polyak [8] expressed the evolutionary and mi-
+croenvironmental origins of tumour heterogeneity. They high-
+lighted its implications for treatment resistance and clinical
+outcomes. Large-scale molecular analyses, like those con-
+ducted by Hoadley et al. [9], also demonstrate that tumours
+cluster into biologically distinct subtypes across tissues of
+origin.
+From the context of machine learning, heterogeneity
+presents a challenge for global predictive modelling. Unsuper-
+vised clustering has been used to identify latent structure in
+high-dimensional biological data for a long time, but clustering
+stability and interpretability remain critical concerns. V on
+Luxburg [16], [17] provides a theoretical foundation for
+clustering methods and stability assessment. She shows the im-
+portance of robustness to initialisation and sampling variabil-
+ity. Analogous challenges arise in single-cell transcriptomics,
+where clustering results can vary depending on algorithmic
+choices and preprocessing [18]. These observations need
+careful validation when interpreting unsupervised subgroup
+discovery, particularly in clinical contexts.
+F . Evaluation Pitfalls and Diagnostic Perspectives
+The limitations of aggregate performance metrics in het-
+erogeneous datasets are becoming popular. The concordance
+index can hide subgroup-specific behaviour and inflate confi-
+dence in unstable models [5], [10]. Recent studies of medi-
+cal AI emphasise that model evaluation must move beyond
+headline metrics to include diagnostic analyses that probe
+failure modes and dataset biases [6]. In this context, few
+multimodal survival studies investigate why models fail or how
+instability relates to underlying biological structure [7]. This
+gap motivates the present work, which positions instability as
+a signal pointing to latent heterogeneity.
+G. Positioning of the Present Study
+This study adopts a diagnostic framework to understand
+the relationship between multimodal fusion, heterogeneity,
+and survival predictability. It does not propose a new sur-
+vival architecture against an exhaustive set of models. By
+analysing learned multimodal embeddings and conditioning
+survival modelling on discovered subgroups, this work bridges
+multimodal representation learning, unsupervised subgroup
+discovery, and survival analysis in a unified framework.
+TABLE I
+COMPREHENSIVECOMPARISON OFRELATEDWORK INSURVIVALANALYSIS, MULTIMODALLEARNING,ANDHETEROGENEITYMODELING
+Authors Paper Dataset Pros Cons Gap Relevance to This Pa-
+per
+Mobadersany et al.
+(2018)Histology + genomics
+survival predictionTCGA Early demonstration
+of multimodal survival
+learningLimited fusion strat-
+egy; global modelingNo heterogeneity or
+stability analysisEstablishes
+multimodal survival
+baseline
+Cheerla & Gevaert
+(2019)Multimodal pancancer
+prognosis predictionTCGA
+(multi-
+cancer)Scalable multimodal
+frameworkRelies on average
+global metricsIgnores subgroup-
+specific behaviorMotivates multimodal
+integration
+Vale-Silva & Rohr
+(2021)Multimodal deep
+learning for survivalTCGA Improved average C-
+indexLimited interpretabil-
+ityNo diagnostic failure
+analysisSupports need for deep
+fusion
+Raza et al. (PS3,
+2024)Multimodal
+transformer for
+survivalTCGA Strong cross-attention
+fusionArchitecture-centric
+evaluationDoes not analyze in-
+stabilityMotivates transformer-
+based fusion
+Harrell et al.
+(1982)Concordance index
+foundationClinical
+cohortsIntroduces standard
+survival metricSingle scalar summary Cannot capture hetero-
+geneityEvaluation baseline
+Longato et al.
+(2020)C-index evaluation pit-
+fallsSynthetic +
+clinicalCritical analysis of C-
+index limitationsNo alternative metrics
+proposedDoes not link instabil-
+ity to biologyJustifies instability-
+focused evaluation
+Varoquaux &
+Cheplygina (2024)Failures of ML in
+medical imagingMultiple Highlights evaluation
+and generalization is-
+suesConceptual analysis No survival-specific
+focusMotivates diagnostic
+modeling
+TCGA Consortium
+(2013)Pan-Cancer TCGA
+projectTCGA Standardized
+multimodal datasetsRetrospective, event-
+limitedNo modeling guidance Primary data source
+Hoadley et al.
+(2014)COCA molecular sub-
+typesTCGA (12
+cancers)Establishes cross-
+tissue heterogeneityNot predictive model-
+ingNo multimodal fusion Biological heterogene-
+ity anchor
+Marusyk & Polyak
+(2010)Tumor heterogeneity
+theoryConceptual Foundational
+heterogeneity theoryNot computational No survival modeling Theoretical motivation
+von Luxburg
+(2010)Clustering stability
+overviewTheoretical Formal stability frame-
+workNot application-
+specificNo survival context Justifies stability test-
+ing
+von Luxburg
+(2007)Spectral clustering tu-
+torialTheoretical Foundational
+clustering methodParameter-sensitive No clinical validation Clustering background
+Kiselev et al.
+(2019)Single-cell clustering
+challengesscRNA-seq Highlights clustering
+pitfallsDifferent data regime Not survival-related Analogous clustering
+caution
+Katzman et al.
+(2018)DeepSurv Clinical
+cohortsCox-based deep sur-
+vival modelingUnimodal; global
+modelNo heterogeneity mod-
+elingSurvival modeling
+baseline
+Lee et al. (2018) DeepHit Clinical
+cohortsFlexible competing-
+risk modelingDiscrete-time formula-
+tionNot multimodal Alternative survival
+formulation
+Wiegrebe et al.
+(2023)DL survival review Multiple Comprehensive
+method surveyArchitecture-centric No diagnostic analysis Positions literature gap
+Kather et al. (2020) Image-based genomics
+predictionTCGA Shows morphology
+encodes molecular
+signalNot survival-focused No outcome modeling Supports multimodal
+signal discovery
+Tang et al.
+(MOMA, 2023)Explainable
+multimodal MLMulti-cohort Strong interpretability
+focusTask-specific
+frameworkDoes not address insta-
+bilityShows explainability
+potential
+III. METHODS
+A. Study Design and Overall Methodological Framework
+This study follows a sequential diagnostic methodol-
+ogy rather than a conventional performance-driven modeling
+pipeline. Instead of iteratively optimising architectures to
+maximise global survival prediction accuracy, we explicitly
+investigate the causes of performance instability in multimodal
+survival models. The methodological design therefore pro-
+ceeds in three stages:
+(1) construction and evaluation of a standard multimodal
+survival model, (2) unsupervised analysis of learned mul-
+timodal representations to identify latent patient structure,
+and (3) conditional survival modeling within discovered sub-
+groups.
+This design choice is motivated by growing recognition
+that aggregate performance metrics may obscure systematicfailure modes in heterogeneous clinical datasets [5], [6]. By
+structuring the analysis sequentially, we aim to distinguish
+between architectural limitations and population-level effects,
+and to assess whether instability reflects latent biological
+heterogeneity rather than noise or overfitting.
+A high-level overview of the methodological pipeline is
+illustrated in Fig. 1.
+B. Dataset and Cohort Definition
+All analyses were conducted on data from **The Cancer
+Genome Atlas Breast Invasive Carcinoma (TCGA-BRCA)**
+cohort [11]. TCGA provides paired molecular and histopathol-
+ogy data generated using standardized protocols, making it
+a widely used benchmark for multimodal cancer modeling
+studies.
+The final study cohort consisted of **193 patients** for
+whom both RNA sequencing data and digitized whole-slide
+figures/pipeline_overview.pdf
+Fig. 1. Overview of the diagnostic multimodal survival modeling pipeline.
+The process proceeds from global multimodal modeling to unsupervised
+embedding analysis and conditional survival modeling.
+histopathology images were available. Survival outcomes were
+defined using overall survival time and censoring indicators
+provided by TCGA clinical annotations. Within this cohort,
+**29 death events** were observed, placing the study firmly
+in an **event-limited survival analysis regime**.
+This low event rate has important methodological im-
+plications. In survival analysis, effective model capacity is
+constrained not by sample size alone but by the number of
+observed events [10]. This consideration directly informed
+downstream design choices, including image token sampling,
+model complexity, and evaluation strategy.
+C. RNA-Seq Data Processing and Representation
+RNA sequencing data were represented using **pre-
+computed low-dimensional embeddings**, obtained via prin-
+cipal component analysis (PCA) applied to normalized gene
+expression profiles. Each patient was represented by a **128-
+dimensional RNA embedding**, capturing dominant transcrip-
+tional variation while reducing dimensionality and noise.
+To ensure numerical stability during training, all RNA
+embeddings were preprocessed as follows:
+* Any NaN or infinite values were replaced with zero.
+* Feature values were clipped to a fixed range to limit the
+influence of outliers.
+This preprocessing strategy mirrors common practices in
+deep survival modeling and avoids introducing additional
+assumptions through gene-level feature selection or pathway
+aggregation. Importantly, no survival outcomes or subgroup
+labels were used at this stage.D. Histopathology Image Processing and Tokenization
+Digitized whole-slide images (WSIs) were processed into
+patch-level feature representations using a pretrained con-
+volutional neural network. Each WSI was tiled into tissue-
+containing patches following foreground segmentation, and
+each patch was encoded as a **2048-dimensional feature
+vector**.
+This patch-level representation preserves local morphologi-
+cal information while enabling efficient downstream modeling.
+Feature extraction was performed independently of survival
+outcomes and molecular data to avoid information leakage.
+For each patient, a fixed number of **(K = 8)** image
+tokens were selected by **random sampling** from the avail-
+able tissue patches. Patients with fewer than eight valid patches
+were zero-padded to maintain a consistent sequence length
+across the cohort.
+The choice of (K = 8) reflects a **conservative tradeoff**
+between capturing spatial heterogeneity and limiting model
+capacity in an event-limited survival setting. While larger
+values of (K) may encode finer-grained morphological detail,
+increasing the number of image tokens also increases the
+effective degrees of freedom of the model, amplifying variance
+and overfitting risk given only 29 observed events.
+Random sampling was intentionally adopted to avoid in-
+troducing selection bias or survival-informed patch filtering.
+By accepting noisy and potentially uninformative patches,
+this strategy allows us to test whether meaningful structure
+can emerge from minimal assumptions, strengthening the
+diagnostic nature of the analysis.
+All image tokens underwent the following preprocessing
+steps:
+* Replacement of NaN and infinite values with zero, * L2
+normalisation of feature vectors, * Feature clipping to a fixed
+range to stabilise training.
+E. Multimodal Survival Transformer Architecture
+The core model used in this study is a **transformer-
+based multimodal survival network**, designed to integrate
+histopathology and RNA-seq data through **deep cross-
+attention**. The architecture is intentionally kept simple and
+standard, as the goal is not architectural novelty but diagnostic
+insight.
+A schematic of the model architecture is shown in
+**Fig. 2**.
+“‘latex
+Image tokens and RNA embeddings originate from different
+feature spaces and dimensionalities. To enable interaction, both
+modalities are first projected into a shared latent space of
+dimension (d model) using separate linear projection layers. This
+step ensures compatibility for attention-based fusion.
+The sequence of image tokens for each patient is processed
+using a multi-head self-attention layer. This allows the model
+to learn relationships between different morphological regions
+within the same WSI, such as tumor–stroma interfaces or
+spatially distinct tumor regions.
+figures/model_architecture.pdf
+Fig. 2. Architecture of the Multimodal Survival Transformer. Image tokens
+are processed via self-attention, aggregated, and fused with RNA embeddings
+through cross-attention.
+Following self-attention, the token sequence is aggregated
+into a single fixed-length image representation using a learn-
+able linear projection and mean pooling. This aggregation step
+produces a holistic summary of the patient’s histopathology
+while retaining information learned through attention.
+Deep fusion is achieved using a **cross-attention mecha-
+nism**, where the aggregated image representation acts as the
+query and the RNA embedding serves as the key and value.
+This design forces the model to learn **conditional interac-
+tions**, effectively asking how molecular features should be
+interpreted in the context of observed morphology.
+This interaction space is central to the study. Prior work
+has shown that simple concatenation is insufficient to model
+such conditional relationships [1], [2]. Cross-attention provides
+a principled mechanism for learning these dependencies and
+is hypothesized to be responsible for revealing latent patient
+structure.
+The output of the cross-attention layer is passed through a
+linear risk prediction head, producing a single scalar risk score
+per patient. Higher risk scores correspond to higher predicted
+hazard.
+F . Training Objective and Optimization
+The model was trained using the **Cox partial likelihood
+loss**, a standard objective for survival analysis that ac-
+commodates censored data [10]. To partially compensate for
+the imbalance between censored and event samples, observed
+events were upweighted by a factor of (α= 2.0).
+This weighting scheme was selected to modestly emphasize
+informative events without dominating the loss or destabilizingtraining. No time discretization or competing-risk modeling
+was employed, as the focus of this study is representation
+learning rather than survival model comparison.
+G. Global Model Evaluation Protocol
+Global model performance was evaluated using a **strat-
+ified shuffle-split cross-validation** scheme. Each split pre-
+served the event-to-censoring ratio to the extent possible. For
+each fold, the model was trained from scratch and evaluated
+on a held-out validation set.
+Predictive performance was quantified using the **concor-
+dance index (C-index)**, the most commonly reported metric
+in survival modeling [10]. Rather than focusing solely on
+the mean C-index, we explicitly analyzed the distribution of
+performance values across splits to assess stability.
+As emphasized in prior work, the C-index can obscure
+heterogeneous model behavior and exhibit high variance in
+mixed populations [5]. In this study, variability in global
+performance is treated not as random noise but as a signal
+motivating further investigation.
+H. Unsupervised Discovery of Latent Patient Subgroups
+After training, patient-level multimodal embeddings were
+extracted from the output of the cross-attention layer.
+These embeddings represent the learned interaction between
+histopathology and RNA-seq features and serve as the basis
+for unsupervised analysis.
+Unsupervised clustering was performed using **KMeans
+with (K = 2)**. Survival outcomes, receptor status, and clinical
+variables were not used during clustering. The choice of (K =
+2) reflects the goal of identifying coarse, prognostically distinct
+subgroups rather than fine-grained subtype taxonomies.
+A conceptual illustration of the clustering process is shown
+in **Fig. 3**.
+To assess robustness, clustering was repeated across **50
+random initializations**, and agreement was quantified using
+the **Adjusted Rand Index (ARI)** [17]. High ARI values in-
+dicate stable partitions insensitive to initialization, addressing
+known concerns regarding unsupervised clustering reliability
+[18].
+I. Ablation Analysis for Fusion Necessity
+To determine whether discovered subgroups were specific
+to deep multimodal fusion, we conducted ablation experiments
+using:
+1. RNA embeddings alone, 2. Aggregated image embed-
+dings alone, 3. Naive concatenation of RNA and image fea-
+tures.
+Each representation was clustered using the same procedure,
+and resulting partitions were compared to those obtained from
+deep fusion using ARI. This analysis tests whether subgroup
+structure is an emergent property of cross-modal interaction
+rather than unimodal signal.
+figures/clustering_embeddings.pdf
+Fig. 3. Conceptual visualization of unsupervised clustering applied to
+multimodal embeddings learned via cross-attention.
+J. Conditional Survival Modeling
+Following subgroup discovery, the multimodal survival
+model was retrained using data exclusively from the **largest
+discovered subgroup**. This conditional modeling approach
+tests whether survival predictability improves within a more
+homogeneous population.
+Performance was evaluated using **bootstrap resampling
+(200 iterations)** to estimate the distribution of C-index
+values and corresponding confidence intervals. Results were
+benchmarked against a unimodal RNA-only Cox model trained
+on the same subgroup.
+K. Negative Control Experiment
+To validate that improved performance reflected genuine
+prognostic signal rather than overfitting, a negative control
+experiment was performed. Survival event labels were ran-
+domly permuted, and the conditional model was retrained and
+evaluated using the same protocol. Performance collapsing to
+chance levels provides evidence that the original signal was
+non-random.
+L. Summary of Methodological Contributions
+In summary, the proposed methodology reframes multi-
+modal survival modeling as a diagnostic process. By integrat-
+ing standard survival modeling, unsupervised representation
+analysis, and conditional evaluation, this framework explicitly
+connects performance instability to latent heterogeneity and
+provides a principled path toward heterogeneity-aware prog-
+nostic modeling.figures/global_cindex_instability.pdf
+Fig. 4. Distribution of C-index values across cross-validation splits for global
+multimodal survival modeling on the full TCGA-BRCA cohort. The wide
+variance indicates unstable and unreliable global prediction.
+IV. RESULTS
+The results are presented to mirror the sequential diagnostic
+framework outlined in the Methods section. Rather than opti-
+mizing for a single performance metric, we first demonstrate
+the instability of global multimodal survival prediction, then
+uncover its underlying cause through unsupervised analysis
+of learned multimodal representations, and finally show that
+conditioning survival modeling on discovered latent subgroups
+restores stable and accurate prognostic performance.
+A. Global Multimodal Survival Prediction Is Highly Unstable
+We begin by evaluating the transformer-based multimodal
+survival model on the full TCGA-BRCA cohort using strati-
+fied shuffle-split cross-validation. Predictive performance was
+quantified using the concordance index (C-index) for each
+validation split.
+As shown in **Fig. 4**, the model exhibits **extreme
+variability** in performance across splits. While some folds
+achieve moderately high C-index values, others approach or
+fall below random performance. The resulting distribution
+spans a wide range, despite identical architecture, hyperpa-
+rameters, and training protocol.
+The mean C-index alone is therefore insufficient to char-
+acterize model behavior. Instead, the **variance** of per-
+formance highlights a fundamental lack of robustness. Im-
+portantly, this instability persists despite the use of deep
+multimodal fusion, suggesting that architectural expressiveness
+alone does not resolve the issue.
+TABLE II
+CHARACTERISTICS OFUNSUPERVISEDMULTIMODALCLUSTERS
+Cluster Patients Events Event Rate
+Cluster 0 157 18 11%
+Cluster 1 36 11 31%
+figures/km_latent_clusters.pdf
+Fig. 5. Kaplan–Meier survival curves for the two latent patient subgroups
+discovered via unsupervised clustering of multimodal embeddings. The num-
+ber of patients at risk is shown below the x-axis.
+This observation motivates the central question of the study:
+*why does a model with sufficient representational capacity
+fail to generalize consistently within a single cohort?*
+B. Unsupervised Clustering of Multimodal Embeddings Re-
+veals Latent Structure
+To investigate the source of instability, we analyze the
+internal representations learned by the model. Specifically, we
+extract patient-level multimodal embeddings from the output
+of the cross-attention fusion layer and perform unsupervised
+clustering without using survival outcomes or clinical labels.
+Applying KMeans clustering with (K=2) partitions the 193
+patients into two distinct subgroups. The resulting cluster sizes
+and survival characteristics are summarized in **Table II**.
+The substantial difference in event rates immediately sug-
+gests that the clustering captures prognostically relevant struc-
+ture, despite being performed in a fully unsupervised manner.
+C. Latent Subgroups Exhibit Strong Survival Separation
+We next assess whether the discovered clusters correspond
+to meaningful differences in survival outcomes. Kaplan–Meier
+survival curves for the two clusters are shown in **Fig. 5**,
+including the number of patients at risk at each time point.
+The survival curves show **clear and sustained separa-
+tion**, with Cluster 1 exhibiting significantly worse survivalfigures/ari_stability.pdf
+Fig. 6. Adjusted Rand Index (ARI) across 50 random initializations of
+KMeans clustering. High ARI values indicate stable and reproducible patient
+partitions.
+outcomes than Cluster 0. A log-rank test confirms that this
+difference is highly statistically significant ((p ¡ 0.001)).
+This result is notable for two reasons. First, the separation
+emerges despite the fact that survival outcomes were not used
+during clustering. Second, it demonstrates that the multimodal
+model has learned a representation space in which prognostic
+structure is encoded, even though global prediction using this
+representation is unstable.
+D. Clustering Is Stable Across Random Initializations
+Unsupervised clustering can be sensitive to initialization and
+sampling variability, raising concerns about reproducibility. To
+address this, we evaluate clustering stability across 50 random
+initializations of KMeans and quantify agreement using the
+Adjusted Rand Index (ARI).
+The distribution of ARI values is shown in **Fig. 6**.
+The consistently high ARI values indicate that the discov-
+ered partition is **robust and reproducible**, not an artifact
+of random initialization. This stability strengthens the inter-
+pretation of the clusters as reflecting genuine latent structure
+rather than noise.
+E. Latent Structure Emerges Only Through Deep Multimodal
+Fusion
+To determine whether the discovered subgroups are specific
+to deep multimodal fusion, we perform a series of ablation
+experiments. We repeat the clustering procedure using three
+alternative patient representations:
+1. RNA-seq embeddings alone, 2. Aggregated histopathol-
+ogy embeddings alone, 3. Naive concatenation of RNA and
+image features.
+figures/ablation_ari.pdf
+Fig. 7. Adjusted Rand Index (ARI) between clusters obtained from deep
+multimodal fusion and those obtained from unimodal or naive concatenation
+representations.
+The correspondence between these clusterings and the deep
+fusion-based clustering is quantified using ARI and summa-
+rized in **Fig. 7**.
+All ablated representations show **near-zero ARI**, indi-
+cating negligible overlap with the deep fusion clusters. This
+result demonstrates that the prognostically relevant structure is
+**not present in either modality alone**, nor is it recoverable
+through simple feature concatenation.
+Instead, the structure emerges specifically in the **interac-
+tion space** learned by cross-attention, underscoring the im-
+portance of deep multimodal fusion for capturing conditional
+relationships between morphology and gene expression.
+F . Biological Interpretation of Discovered Subgroups
+To assess whether the latent subgroups correspond to known
+biological factors, we perform a series of post hoc biological
+analyses.
+First, we examine RNA-based proxies for estrogen receptor
+(ER), progesterone receptor (PR), and HER2 status. Fisher’s
+exact test reveals no significant enrichment of receptor-defined
+subtypes between the two clusters ((p = 0.66)).
+This negative result is critical: it demonstrates that the dis-
+covered subgroups are **not trivially rediscovering canonical
+breast cancer subtypes**, such as triple-negative disease.
+We next analyze expression of **MKI67**, a well-
+established marker of cellular proliferation. As shown in
+**Fig. 8**, Cluster 1 exhibits substantially higher MKI67
+expression than Cluster 0.
+This finding provides a biologically coherent explanation
+for the observed survival differences. Increased proliferativefigures/mki67_boxplot.pdf
+Fig. 8. Distribution of MKI67 expression across the two latent clusters. Higher
+expression in Cluster 1 indicates increased proliferative activity.
+activity is a hallmark of aggressive tumors and is consistent
+with the poorer outcomes observed in Cluster 1.
+An RNA-based immune infiltration proxy shows only mod-
+est differences between clusters. While statistically detectable,
+these differences are substantially smaller than those observed
+for MKI67, suggesting that immune activity is not the primary
+driver of the latent structure.
+Together, these analyses indicate that the multimodal model
+captures **tumor-intrinsic aggressiveness** rather than recep-
+tor status or immune composition.
+G. Conditional Survival Modeling Restores Predictive Stabil-
+ity
+Having identified stable and biologically meaningful sub-
+groups, we next test whether survival prediction becomes more
+reliable within a homogeneous population.
+We retrain the multimodal survival model using data exclu-
+sively from **Cluster 0** (157 patients, 18 events). Model
+performance is evaluated using 200 bootstrap resamples to
+estimate stability.
+The resulting distribution of C-index values is shown in
+**Fig. 9**.
+In stark contrast to the global setting, conditional modeling
+yields **consistently high and stable performance**, demon-
+strating that survival predictability is dramatically improved
+within a homogeneous subgroup.
+To isolate the contribution of multimodal fusion,
+we compare the conditional multimodal model to an
+RNA-only Cox model trained on the same subgroup.
+The distribution of the difference in C-index ((∆)C−
+index)acrossbootstrapresamplesisshownin∗ ∗Fig.10∗ ∗.
+figures/conditional_cindex.pdf
+Fig. 9. Bootstrap distribution of C-index values for multimodal survival
+modeling within Cluster 0. Performance is both high and stable.
+figures/delta_cindex.pdf
+Fig. 10. Distribution of the improvement in C-index achieved by the
+multimodal model over an RNA-only baseline within Cluster 0.
+The consistently positive∆C-index values indicate that
+histopathology contributes meaningful prognostic information
+beyond RNA-seq, but only when the population is sufficiently
+homogeneous.figures/negative_control_km.pdf
+Fig. 11. Negative control experiment with shuffled survival labels. Kaplan–
+Meier curves show no separation, confirming that original performance reflects
+true prognostic signal.
+H. Negative Control Confirms Valid Prognostic Signal
+Finally, we perform a negative control experiment to rule
+out spurious overfitting. Survival event labels are randomly
+permuted, and the conditional multimodal model is retrained
+and evaluated using the same bootstrap protocol.
+As shown in **Fig. 11**, performance collapses to chance,
+and Kaplan–Meier curves based on predicted risk groups show
+no separation.
+This result confirms that the strong conditional performance
+observed earlier is not an artifact of model capacity or data
+leakage.
+I. Summary of Key Findings
+Taken together, the results demonstrate that:
+1. Global multimodal survival prediction is highly unstable
+in heterogeneous cohorts, 2. Deep multimodal fusion learns
+stable latent representations that encode prognostic structure,
+3. This structure is biologically meaningful and aligned with
+tumor aggressiveness, 4. Conditioning survival modeling on
+discovered subgroups restores stability and accuracy.
+These findings collectively support the central claim of
+this work: survival predictability is conditional on latent het-
+erogeneity**, and instability in global models reflects this
+underlying structure rather than architectural failure.
+V. DISCUSSION
+This study set out to investigate a phenomenon that is widely
+observed but rarely interrogated in multimodal cancer survival
+modeling: the instability of global predictive performance.
+Rather than proposing a new architecture or optimizing for a
+higher average concordance index, we adopted a diagnostic
+perspective to understand why multimodal survival models
+frequently fail to generalize reliably, even within a single, well-
+curated cohort. The results provide compelling evidence that
+such instability is not merely a technical artifact, but a direct
+consequence of unmodeled latent patient heterogeneity.
+A. Rethinking Instability in Multimodal Survival Models
+A central finding of this work is that global multimodal
+survival prediction on the TCGA-BRCA cohort is highly un-
+stable across data splits. While this observation might initially
+be interpreted as evidence of model inadequacy, our analysis
+suggests a different interpretation. The instability arises despite
+the use of a transformer-based architecture with sufficient
+representational capacity to model complex cross-modal in-
+teractions. This indicates that the failure is not architectural in
+nature.
+Instead, the instability reflects a deeper issue: the assump-
+tion that a single prognostic function can adequately model
+survival across a biologically heterogeneous population. In dis-
+eases such as breast cancer, where tumors differ substantially
+in molecular drivers, growth dynamics, and microenvironmen-
+tal interactions, this assumption is unlikely to hold. When a
+global model is trained on such a mixed population, small
+changes in the composition of training and validation splits
+can dramatically alter the effective prognostic function being
+learned, leading to high variance in performance.
+From this perspective, instability is not noise to be sup-
+pressed, but a **signal** indicating the presence of multiple,
+competing survival-generating mechanisms within the cohort.
+Recognizing instability as informative rather than incidental
+represents a conceptual shift in how multimodal survival
+models should be evaluated and interpreted.
+B. Deep Multimodal Fusion as a Tool for Heterogeneity
+Discovery
+One of the most striking results of this study is that, despite
+failing to produce stable global predictions, the multimodal
+transformer learns patient representations that encode robust
+and prognostically meaningful structure. Unsupervised clus-
+tering of the fused embeddings reveals stable latent subgroups
+with markedly different survival outcomes, even though sur-
+vival labels were not used during clustering.
+This finding highlights a crucial distinction between **pre-
+dictive performance** and **representational quality**. A
+model may fail as a global predictor while still learning a
+highly informative representation of the data. In our case,
+the cross-attention mechanism enables the model to learn
+conditional relationships between histopathology and gene
+expression, producing an interaction space in which latent
+heterogeneity becomes visible.
+Importantly, this structure does not emerge from unimodal
+representations or naive feature concatenation. The ablation
+results demonstrate that neither RNA-seq data nor histopathol-
+ogy alone contains sufficient information to recover the discov-
+ered subgroups. Instead, the prognostically relevant structure isan emergent property of deep multimodal fusion. This supports
+the view that the value of multimodal learning lies not only
+in aggregating information, but in how different biological
+modalities condition and contextualize one another.
+C. Biological Interpretation of Latent Subgroups
+A critical question in any unsupervised analysis is whether
+discovered structure corresponds to meaningful biology or
+merely reflects technical artifacts. Several lines of evidence
+support the biological validity of the latent subgroups identi-
+fied in this study.
+First, the clusters are not explained by canonical breast
+cancer receptor status. The absence of significant enrichment
+for ER, PR, or HER2-defined subtypes indicates that the model
+is not simply rediscovering known clinical categories. This
+negative result is important, as it rules out a trivial explanation
+for the observed survival separation.
+Second, the clusters exhibit clear differences in proliferative
+activity, as evidenced by differential expression of MKI67.
+Increased proliferation is a well-established marker of aggres-
+sive tumor behavior and is consistent with the poorer survival
+observed in the high-risk cluster. This alignment between
+molecular biology and clinical outcomes provides a coherent
+biological interpretation of the latent structure.
+In contrast, immune-related differences between clusters are
+modest, suggesting that immune infiltration is not the primary
+driver of the discovered heterogeneity. Together, these findings
+indicate that the multimodal model captures tumor-intrinsic
+aggressiveness rather than superficial clinical or immune fea-
+tures. This supports the hypothesis that deep multimodal fusion
+can uncover subtle, interaction-level biological signals that are
+not accessible through unimodal analysis.
+D. Conditional Survival Predictability and Its Implications
+Perhaps the most consequential result of this study is the
+dramatic improvement in survival prediction achieved through
+conditional modeling. When the multimodal survival model is
+retrained exclusively within the largest discovered subgroup,
+predictive performance becomes both high and remarkably sta-
+ble. This contrasts sharply with the unstable behavior observed
+in the global setting.
+This result demonstrates that **survival predictability is
+conditional** on population homogeneity. In other words, the
+difficulty of survival prediction is not uniform across patients;
+some subgroups admit a well-defined prognostic function,
+while others do not. Global modeling obscures this distinction
+by forcing a single function to fit all patients simultaneously.
+The comparison with an RNA-only baseline further under-
+scores the value of multimodality in this conditional setting.
+Histopathology contributes meaningful prognostic information
+beyond gene expression alone, but only when the population
+is sufficiently homogeneous. This finding helps reconcile con-
+flicting reports in the literature regarding the utility of mul-
+timodal fusion: its benefits may be highly context-dependent
+and masked in heterogeneous global analyses.
+E. Methodological Implications for Multimodal Survival Re-
+search
+The results of this study have several important method-
+ological implications for future research.
+First, they challenge the prevailing emphasis on global
+performance metrics. Reporting a single mean C-index without
+examining variance or subgroup behavior can be misleading,
+particularly in heterogeneous cohorts. Diagnostic analyses that
+probe stability and representation structure should become a
+standard component of multimodal survival modeling.
+Second, the findings suggest that multimodal models should
+be evaluated not only as predictors, but also as represen-
+tation learning tools. Even when predictive performance is
+unstable, learned embeddings may encode valuable biological
+information that can inform subgroup discovery, hypothesis
+generation, and downstream modeling.
+Third, the success of conditional modeling points toward
+**heterogeneity-aware pipelines** as a promising direction.
+Rather than training a single global model, future approaches
+may benefit from a two-stage strategy: first, use multimodal
+fusion to identify latent subgroups; second, train simpler and
+more stable prognostic models within each subgroup. Such
+an approach aligns more closely with the biological reality of
+cancer as a collection of related but distinct diseases.
+VI. CONCLUSION
+Multimodal deep learning has long been proposed as a path-
+way toward more accurate and biologically informed cancer
+prognostication. However, despite increasingly sophisticated
+fusion architectures, multimodal survival models continue to
+exhibit unstable and irreproducible performance, limiting their
+clinical utility. In this work, we presented a diagnostic inves-
+tigation into the origins of this instability, reframing it not as
+a technical deficiency but as a symptom of unmodeled latent
+patient heterogeneity.
+Using a transformer-based multimodal survival model ap-
+plied to the TCGA-BRCA cohort, we demonstrated that global
+survival prediction is highly unstable across data splits, even
+when modern deep fusion mechanisms are employed. Rather
+than attempting to optimize away this instability, weanalysedd
+thelearntd multimodal representations and showed that deep
+cross-attention uncovers stable latent patient subgroups with
+markedly different survival outcomes. These subgroups were
+discovered in a fully unsupervised manner and were shown to
+be robust, biologically coherent, and not trivially explained by
+known clinical subtypes.
+Crucially, we found that survival predictability is conditional
+on this latent heterogeneity. When survival modeling was
+restricted to a homogeneous subgroup, predictive performance
+became both stable and substantially improved relative to
+unimodal baselines. This result demonstrates that the appar-
+ent failure of global multimodal survival models conceals
+meaningful prognostic structure that can be unlocked through
+heterogeneity-aware analysis. Moreover, the negative control
+experiments confirmed that the observed improvements reflectgenuine biological signal rather than overfitting or information
+leakage.
+A. Limitations
+Despite these findings, several limitations must be acknowl-
+edged. First, the analysis was conducted on a cohort with a
+limited number of observed survival events, which constrains
+the statistical power of global modeling and may inflate per-
+formance estimates in conditional settings. Although bootstrap
+evaluation and label-shuffling controls were employed, larger
+cohorts with higher event rates are required to confirm the
+robustness of the results.
+Second, all experiments were performed on a single retro-
+spective dataset derived from TCGA. While TCGA provides
+standardized multimodal data and serves as a valuable bench-
+mark, external validation on independent cohorts is necessary
+to establish generalizability and clinical relevance.
+Third, this study focused exclusively on RNA sequenc-
+ing and histopathology images. Other relevant modali-
+ties—including somatic mutations, copy number alterations,
+epigenetic profiles, treatment information, and longitudinal
+clinical variables—were not considered and may further in-
+fluence latent heterogeneity and survival predictability.
+Finally, the choice to identify a small number of coarse-
+grained subgroups reflects a deliberate tradeoff between inter-
+pretability and granularity. More fine-grained subgroup discov-
+ery may reveal additional structure but would require careful
+methodological safeguards to avoid overfitting and spurious
+findings.
+B. Future Work
+The results of this study point toward several promising
+directions for future research. A key next step is the application
+of this diagnostic framework to larger and more diverse
+multimodal cohorts, including external validation datasets,
+to assess the reproducibility of the discovered heterogeneity
+across populations and clinical settings.
+Methodologically, future work could explore adaptive or
+hierarchical subgroup discovery strategies that balance inter-
+pretability with biological resolution. Integrating additional
+data modalities, such as genomic alterations, epigenetic mark-
+ers, and treatment histories, may further refine subgroup
+definitions and enhance prognostic insight.
+From a modeling perspective, the findings motivate the de-
+velopment of heterogeneity-aware survival pipelines, in which
+multimodal models are explicitly used to identify latent pa-
+tient structure prior to conditional prognostic modeling. Such
+pipelines may yield more stable and clinically meaningful
+predictions than monolithic global models.
+Finally, beyond survival prediction, the learned multimodal
+representations themselves may serve as a basis for down-
+stream biological discovery, including the identification of
+novel tumor phenotypes or treatment-responsive subgroups.
+Leveraging multimodal deep learning as a diagnostic and
+exploratory tool, rather than solely as a predictive engine, rep-
+resents a promising paradigm for future work in computational
+oncology.
+REFERENCES
+[1] P. Mobadersany, S. Yousefi, M. Amgad, D. A. Gutman, L. A. Cooper,
+L. Ding, and D. Gutman, “Predicting cancer outcomes from histology
+and genomics using convolutional networks,”Proceedings of the Na-
+tional Academy of Sciences, vol. 115, no. 13, pp. E2970–E2979, 2018.
+[2] A. Cheerla and O. Gevaert, “Deep learning with multimodal representa-
+tion for pancancer prognosis prediction,”Bioinformatics, vol. 35, no. 14,
+pp. i446–i454, 2019.
+[3] L. A. Vale-Silva and K. Rohr, “Long-term cancer survival prediction
+using multimodal deep learning,”Scientific Reports, vol. 11, no. 1, p.
+13505, 2021.
+[4] S. E. A. Razaet al., “Ps3: A multimodal transformer integrating
+pathology reports with histology images and biological pathways for
+cancer survival prediction,”Proceedings of the IEEE/CVF Conference
+on Computer Vision and Pattern Recognition Workshops, 2024.
+[5] E. Longato, M. Vettoretti, and B. Di Camillo, “A practical perspective
+on the concordance index for the evaluation and selection of prognostic
+time-to-event models,”Journal of Biomedical Informatics, vol. 108, p.
+103496, 2020.
+[6] G. Varoquaux and V . Cheplygina, “How i failed machine learning
+in medical imaging–shortcomings and recommendations,”NPJ Digital
+Medicine, 2024.
+[7] S. Wiegrebeet al., “Deep learning for survival analysis: a review,”IEEE
+Transactions on Neural Networks and Learning Systems, 2023.
+[8] A. Marusyk and K. Polyak, “Tumor heterogeneity: causes and conse-
+quences,”Biochimica et Biophysica Acta, vol. 1805, no. 1, pp. 105–117,
+2010.
+[9] K. A. Hoadleyet al., “Multiplatform analysis of 12 cancer types reveals
+molecular classification within and across tissues of origin,”Cell, vol.
+158, no. 4, pp. 929–944, 2014.
+[10] F. E. Harrell, R. M. Califf, D. B. Pryor, K. L. Lee, and R. A. Rosati,
+“Evaluating the yield of medical tests,”Journal of the American Medical
+Association, vol. 247, no. 18, pp. 2543–2546, 1982.
+[11] The Cancer Genome Atlas Research Network, “The cancer genome atlas
+pan-cancer analysis project,”Nature Genetics, vol. 45, no. 10, pp. 1113–
+1120, 2013.
+[12] J. N. Katheret al., “Pan-cancer image-based detection of clinically
+actionable genetic alterations,”Nature Cancer, vol. 1, pp. 789–799,
+2020.
+[13] J. L. Katzman, U. Shaham, A. Cloninger, J. Bates, T. Jiang, and
+Y . Kluger, “Deepsurv: personalized treatment recommender system
+using a cox proportional hazards deep neural network,”BMC Medical
+Research Methodology, vol. 18, no. 1, pp. 1–12, 2018.
+[14] C. Lee, W. R. Zame, J. Yoon, and M. van der Schaar, “Deephit: A
+deep learning approach to survival analysis with competing risks,” in
+Proceedings of the AAAI Conference on Artificial Intelligence, 2018.
+[15] P.-C. Tang, T.-H. Linet al., “Multi-omics multi-cohort assessment
+(moma) for cancer prognosis using explainable machine learning,”
+Nature Communications, vol. 14, 2023.
+[16] U. von Luxburg, “A tutorial on spectral clustering,”Statistics and
+Computing, vol. 17, no. 4, pp. 395–416, 2007.
+[17] ——, “Clustering stability: an overview,”Foundations and Trends in
+Machine Learning, vol. 2, no. 3, pp. 235–274, 2010.
+[18] V . Y . Kiselev, T. S. Andrews, and M. Hemberg, “Challenges in unsuper-
+vised clustering of single-cell rna-seq data,”Nature Reviews Genetics,
+vol. 20, no. 5, pp. 273–282, 2019.
